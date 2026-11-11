@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#94763E">
+<title>Bibel-Begleiter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFCF7; --chat-bg:#F6EFE2; --surface:#FFFFFF; --surface-2:#FFF6E7; --line:#E8E2D6;
+  --ink:#1E293B; --ink-2:#5B6474; --brand:#94763E; --brand-ink:#FFFFFF; --brand-soft:#F3E7CF;
+  --accent:#F59E0B; --ok:#1E8E3E; --me:#EADBB8; --bot:#FFFFFF; --shadow:0 1px 2px rgba(30,41,59,.08),0 4px 14px rgba(30,41,59,.06);
+  --fs:16px; --scripture:"Lora",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16130E; --chat-bg:#1C1812; --surface:#231E17; --surface-2:#2A241B; --line:#3A3226;
+    --ink:#F2EDE4; --ink-2:#B5AC9C; --brand:#C9A869; --brand-ink:#16130E; --brand-soft:#3A3020;
+    --me:#4A3D24; --bot:#2A241B; --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16130E; --chat-bg:#1C1812; --surface:#231E17; --surface-2:#2A241B; --line:#3A3226;
+  --ink:#F2EDE4; --ink-2:#B5AC9C; --brand:#C9A869; --brand-ink:#16130E; --brand-soft:#3A3020;
+  --me:#4A3D24; --bot:#2A241B; --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:500 var(--fs)/1.55 "Montserrat",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink)}
+.app{max-width:520px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
+@media (min-width:560px){.app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+
+/* header */
+.top{display:flex;align-items:center;gap:12px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));background:var(--brand);color:var(--brand-ink);flex-shrink:0}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--brand-ink);color:var(--brand);display:grid;place-items:center;flex-shrink:0}
+.avatar svg{width:24px;height:24px}
+.top h1{font-size:1.02rem;font-weight:700;line-height:1.2}
+.top .status{font-size:.78rem;opacity:.9;font-weight:500}
+.top .grow{flex:1;min-width:0}
+.icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.icon-btn:hover{background:rgba(255,255,255,.14)}
+.icon-btn svg{width:22px;height:22px}
+
+/* views */
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}
+.view.on{display:block}
+.pad{padding:16px}
+
+/* chat */
+#v-chat{display:none;flex-direction:column;background:var(--chat-bg)}
+#v-chat.on{display:flex}
+.msgs{flex:1;overflow-y:auto;padding:14px 12px 6px;display:flex;flex-direction:column;gap:8px}
+.day{align-self:center;font-size:.72rem;background:var(--surface);color:var(--ink-2);padding:3px 10px;border-radius:8px;box-shadow:var(--shadow);margin:4px 0}
+.b{max-width:86%;padding:8px 11px 6px;border-radius:12px;box-shadow:var(--shadow);font-size:.95em;word-wrap:break-word;position:relative}
+.b.bot{background:var(--bot);align-self:flex-start;border-top-left-radius:3px}
+.b.me{background:var(--me);align-self:flex-end;border-top-right-radius:3px}
+.b .time{display:block;text-align:right;font-size:.68rem;color:var(--ink-2);margin-top:2px}
+.b p+p,.b ul+p,.b p+ul{margin-top:.55em}
+.b ul{padding-left:1.15em}
+.b.err{background:#FDECEC;color:#7A1F1F}
+.ref{display:inline-flex;align-items:center;gap:3px;background:var(--brand-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--brand) 35%,transparent);border-radius:999px;padding:0 8px;margin:1px 1px;font-size:.86em;font-weight:600;line-height:1.6;white-space:nowrap}
+.ref::before{content:"📖";font-size:.85em}
+.typing{display:inline-flex;gap:4px;padding:4px 2px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--ink-2);opacity:.4;animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:.9;transform:translateY(-3px)}}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:6px 12px 4px;flex-shrink:0;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:7px 13px;font-size:.84em;font-weight:600;box-shadow:var(--shadow)}
+.chip:hover{border-color:var(--brand)}
+.composer{display:flex;align-items:flex-end;gap:8px;padding:8px 10px;padding-bottom:calc(8px + env(safe-area-inset-bottom));flex-shrink:0}
+.composer textarea{flex:1;resize:none;border:0;border-radius:22px;padding:11px 16px;background:var(--surface);box-shadow:var(--shadow);max-height:130px;line-height:1.4;outline:none}
+.send{width:46px;height:46px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;flex-shrink:0;box-shadow:var(--shadow)}
+.send:disabled{opacity:.5}
+.send svg{width:21px;height:21px}
+
+/* tabs */
+.tabs{display:flex;border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom);flex-shrink:0}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px 6px;font-size:.66rem;font-weight:600;color:var(--ink-2);min-width:0}
+.tabs button svg{width:22px;height:22px}
+.tabs button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tabs button.on{color:var(--brand)}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.card+.card{margin-top:14px}
+.kicker{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
+.h2{font-size:1.2rem;font-weight:800;line-height:1.25;margin:4px 0 8px}
+.muted{color:var(--ink-2);font-size:.9em}
+.scripture{font-family:var(--scripture);font-size:1.12em;line-height:1.65}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--brand);color:var(--brand-ink);font-weight:700;border-radius:12px;padding:12px 16px;width:100%;margin-top:12px}
+.btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+.sec-title{font-weight:800;font-size:.95rem;margin:16px 0 6px}
+.votd{background:linear-gradient(160deg,var(--brand-soft),var(--surface-2));border:1px solid var(--line)}
+.votd .ref-l{font-weight:700;color:var(--brand);margin-top:8px}
+.dev h3{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--brand);margin-top:14px}
+.dev p{margin-top:4px}
+.skeleton{height:12px;border-radius:6px;background:var(--line);margin:9px 0;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.5}}
+
+/* bible */
+.testament{font-weight:800;font-size:.85rem;color:var(--ink-2);margin:14px 2px 8px;text-transform:uppercase;letter-spacing:.06em}
+.grid-books{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.grid-books button{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;text-align:left;font-weight:600;font-size:.9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid-ch{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.grid-ch button{background:var(--surface);border:1px solid var(--line);border-radius:10px;aspect-ratio:1;font-weight:700}
+.grid-books button:hover,.grid-ch button:hover{border-color:var(--brand)}
+.crumbs{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.crumbs button{color:var(--brand);font-weight:700}
+.reader .v{font-family:var(--scripture);font-size:1.1em;line-height:1.75;padding:2px 4px;border-radius:6px;cursor:pointer}
+.reader .v sup{font-family:"Montserrat",sans-serif;font-size:.62em;font-weight:700;color:var(--brand);margin-right:4px}
+.reader .v.sel{background:var(--brand-soft);text-decoration:underline;text-decoration-color:var(--brand);text-underline-offset:4px}
+.chnav{display:flex;justify-content:space-between;gap:10px;margin:18px 0 90px}
+.chnav button{flex:1;border:1px solid var(--line);border-radius:12px;padding:11px;font-weight:700;background:var(--surface)}
+.selbar{position:absolute;left:12px;right:12px;bottom:12px;background:var(--ink);color:var(--bg);border-radius:14px;padding:8px;display:none;gap:6px;box-shadow:0 6px 24px rgba(0,0,0,.25);z-index:5}
+.selbar.on{display:flex}
+.selbar button{flex:1;padding:9px 4px;border-radius:10px;font-weight:700;font-size:.82em}
+.selbar button:first-child{background:var(--brand);color:var(--brand-ink)}
+
+/* faq */
+.search{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;outline:none}
+.search:focus{border-color:var(--brand)}
+details.cat{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-top:10px;overflow:hidden}
+details.cat summary{list-style:none;padding:13px 14px;font-weight:700;display:flex;justify-content:space-between;gap:10px;cursor:pointer}
+details.cat summary::-webkit-details-marker{display:none}
+details.cat summary .n{color:var(--ink-2);font-weight:600;font-size:.85em}
+.qlist button{display:block;width:100%;text-align:left;padding:11px 14px;border-top:1px solid var(--line);font-size:.92em}
+.qlist button:hover{background:var(--surface-2)}
+.qlist .num{color:var(--brand);font-weight:700;margin-right:6px}
+.panel{position:absolute;inset:0;background:var(--bg);overflow-y:auto;display:none;z-index:4}
+.panel.on{display:block}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--brand);font-weight:700;margin-bottom:12px}
+.answer p+p,.answer ul+p,.answer p+ul{margin-top:.6em}.answer ul{padding-left:1.2em}
+
+/* study */
+.row{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+select,.field{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px;outline:none}
+label.l{font-size:.75rem;font-weight:700;color:var(--ink-2);display:block;margin-bottom:3px}
+.q7{display:flex;gap:12px}
+.q7 .nr{width:32px;height:32px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:800;flex-shrink:0}
+.q7 h4{font-size:1rem;line-height:1.3}
+.q7 textarea{width:100%;margin-top:10px;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:10px;min-height:74px;resize:vertical;outline:none}
+.q7 .mini{margin-top:8px;color:var(--brand);font-weight:700;font-size:.85em}
+.passage{max-height:300px;overflow-y:auto;margin-top:10px}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(15,12,8,.5);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal.on{display:flex}
+.sheet{background:var(--bg);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));max-height:85dvh;overflow-y:auto}
+.sheet .grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
+.seg{display:flex;gap:8px;margin-top:6px}
+.seg button{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;font-weight:700;background:var(--surface)}
+.seg button.on{border-color:var(--brand);background:var(--brand-soft)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:.85em;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+.loader{display:grid;place-items:center;padding:40px;color:var(--ink-2)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6.5A2.5 2.5 0 0 0 4 21.5v0A2.5 2.5 0 0 1 6.5 19H19"/><path d="M12 7v6M9 10h6"/></svg></div>
+    <div class="grow">
+      <h1 id="hTitle">Bibel-Begleiter</h1>
+      <div class="status" id="hStatus">online</div>
+    </div>
+    <button class="icon-btn" id="btnNew" aria-label="New chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+    <button class="icon-btn" id="btnSettings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></button>
+  </header>
+
+  <main>
+    <section class="view on" id="v-chat">
+      <div class="msgs" id="msgs"></div>
+      <div class="chips" id="chips"></div>
+      <form class="composer" id="composer">
+        <textarea id="input" rows="1" maxlength="2000"></textarea>
+        <button class="send" id="sendBtn" type="submit" aria-label="Send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+      </form>
+    </section>
+    <section class="view" id="v-today"><div class="pad" id="today"></div></section>
+    <section class="view" id="v-bible"><div class="pad" id="bible"></div></section>
+    <section class="view" id="v-faq"><div class="pad" id="faq"></div></section>
+    <section class="view" id="v-study"><div class="pad" id="study"></div></section>
+    <div class="panel" id="faqPanel"><div class="pad" id="faqAnswer"></div></div>
+    <div class="selbar" id="selbar"></div>
+  </main>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="chat" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5Z"/></svg><span data-t="tabChat"></span></button>
+    <button data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span data-t="tabToday"></span></button>
+    <button data-tab="bible"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg><span data-t="tabBible"></span></button>
+    <button data-tab="faq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span data-t="tabFaq"></span></button>
+    <button data-tab="study"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span data-t="tabStudy"></span></button>
+  </nav>
+</div>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN — lo único que hay que tocar
+   ========================================================= */
+var CONFIG = {
+  // URL de la Edge Function de Supabase, ej: https://abcdxyz.supabase.co/functions/v1/bibel-chat
+  API_URL: "",
+  // "anon public key" de Supabase (es pública, no es la clave de OpenAI)
+  API_KEY: "",
+  // Carpeta donde están las Biblias (es.json, de.json…). Relativa a esta página.
+  BIBLE_BASE: "bibles/",
+  // Idioma si no se puede detectar
+  DEFAULT_LANG: "de"
+};
+
+/* ========================================================= */
+var LANGS = ["de","en","es","pt","fr","it"];
+var LANG_NAMES = {de:"Deutsch",en:"English",es:"Español",pt:"Português",fr:"Français",it:"Italiano"};
+
+var T = {
+de:{appName:"Bibel-Begleiter",online:"online · antwortet sofort",typing:"schreibt …",tabChat:"Chat",tabToday:"Heute",tabBible:"Bibel",tabFaq:"150 Fragen",tabStudy:"7 Fragen",
+welcome:"Hallo! 👋 Ich bin dein persönlicher **Bibel-Begleiter**.\n\nFrag mich alles zu deinem Bibelstudium – zu einem Vers, einer Person, einem ganzen Buch oder dazu, was ein Text für deinen Alltag bedeutet. Ich antworte mit den passenden Bibelstellen zum Nachschlagen. Keine Frage ist zu klein.\n\nWomit fangen wir an?",
+placeholder:"Schreib deine Frage …",suggestions:["Wer war Melchisedek?","Warum gibt es zwei Schöpfungsberichte?","Wo fange ich am besten an zu lesen?","Was bedeutet Gnade?","Erklär mir Psalm 23","Wie bete ich, wenn mir die Worte fehlen?"],
+newChatConfirm:"Den aktuellen Chat löschen und neu beginnen?",errNet:"Ich konnte gerade nicht antworten. Prüfe deine Internetverbindung und versuch es gleich noch einmal.",errCfg:"Die App ist noch nicht mit dem Server verbunden (CONFIG.API_URL ist leer).",
+loading:"Wird geladen …",verseOfDay:"Vers des Tages",devotional:"Tagesimpuls",exercise:"Übung für heute",question:"Frage zum Nachdenken",prayer:"Gebet",talkAbout:"Mit dem Begleiter darüber sprechen",preparing:"Dein Impuls für heute wird vorbereitet …",
+ot:"Altes Testament",nt:"Neues Testament",chapter:"Kapitel",books:"Bücher",askVerse:"Begleiter fragen",copy:"Kopieren",copied:"Kopiert ✓",study7:"7 Fragen",readChapter:"Ganzes Kapitel lesen",prev:"‹ Zurück",next:"Weiter ›",tapVerse:"Tippe auf einen Vers, um ihn zu markieren.",
+faqTitle:"Die 150 häufigsten Fragen beim Bibelstudium",faqIntro:"Nach Thema und Buch geordnet. Tippe auf eine Frage – dein Begleiter beantwortet sie mit Bibelstellen.",faqSearch:"Frage suchen …",faqNone:"Keine Frage gefunden. Stell sie einfach im Chat!",back:"Zurück",continueChat:"Im Chat weiterfragen",translating:"Fragen werden übersetzt …",
+studyTitle:"Die 7 Fragen für jeden Bibelabschnitt",studyIntro:"Mit diesen 7 Fragen kannst du jeden Text selbst erschließen. Wähle einen Abschnitt, lies ihn langsam und geh die Fragen der Reihe nach durch. Deine Notizen bleiben auf diesem Gerät gespeichert.",
+book:"Buch",fromV:"Vers von",toV:"bis",open:"Abschnitt öffnen",notes:"Deine Notizen …",help:"Hilfe vom Begleiter",choosePassage:"Wähle zuerst einen Abschnitt.",
+settings:"Einstellungen",language:"Sprache",autoLang:"Automatisch nach deinem Standort erkannt. Du kannst sie jederzeit ändern.",textSize:"Schriftgröße",translationL:"Bibelübersetzung",reset:"Alle Daten auf diesem Gerät löschen",resetConfirm:"Chat, Notizen und gespeicherte Antworten löschen?",close:"Schließen",
+explain:"Erkläre mir {ref}.",talkMsg:"Lass uns über {ref} sprechen. Was bedeutet dieser Text für mich heute?",helpMsg:"Hilf mir bei Frage {n} der 7 Fragen („{q}“) zu {ref}.",
+cats:["Die Bibel verstehen","1. Mose bis 5. Mose","Geschichte Israels","Poesie und Propheten","Jesus und die Evangelien","Apostelgeschichte und Briefe","Offenbarung und Endzeit","Gott, Glaube und Heil","Schwierige Fragen","Die Bibel im Alltag"],
+q7:[["Was steht da?","Lies langsam. Wer kommt vor, was passiert, wo und wann? Welche Wörter wiederholen sich?"],["In welchem Zusammenhang steht der Text?","Was kommt davor und danach? Wer schreibt an wen, und in welcher Situation?"],["Was zeigt mir der Text über Gott?","Wie handelt Gott (oder Jesus) hier? Welche Eigenschaft wird sichtbar?"],["Was zeigt mir der Text über den Menschen?","Wo erkenne ich mich wieder – in Stärke, Schwäche, Frage oder Angst?"],["Gibt es ein Versprechen, eine Aufforderung oder eine Warnung?","Unterstreiche es und formuliere es in eigenen Worten."],["Wo sagt die Bibel noch etwas dazu?","Verbinde den Text mit anderen Stellen. Wie passt er ins große Ganze?"],["Was nehme ich heute mit?","Ein konkreter Schritt für heute und ein kurzes Gebet als Antwort."]]},
+en:{appName:"Bible Companion",online:"online · replies instantly",typing:"typing …",tabChat:"Chat",tabToday:"Today",tabBible:"Bible",tabFaq:"150 Questions",tabStudy:"7 Questions",
+welcome:"Hi! 👋 I'm your personal **Bible Companion**.\n\nAsk me anything about your Bible study – a verse, a person, a whole book, or what a passage means for your daily life. I'll answer with the matching Bible references so you can look them up. No question is too small.\n\nWhere shall we start?",
+placeholder:"Type your question …",suggestions:["Who was Melchizedek?","Why are there two creation accounts?","Where should I start reading?","What does grace mean?","Explain Psalm 23 to me","How do I pray when I have no words?"],
+newChatConfirm:"Delete this chat and start over?",errNet:"I couldn't answer just now. Please check your internet connection and try again.",errCfg:"The app is not connected to the server yet (CONFIG.API_URL is empty).",
+loading:"Loading …",verseOfDay:"Verse of the day",devotional:"Daily devotional",exercise:"Exercise for today",question:"Question to reflect on",prayer:"Prayer",talkAbout:"Talk about it with the Companion",preparing:"Preparing today's devotional …",
+ot:"Old Testament",nt:"New Testament",chapter:"Chapter",books:"Books",askVerse:"Ask the Companion",copy:"Copy",copied:"Copied ✓",study7:"7 Questions",readChapter:"Read the whole chapter",prev:"‹ Previous",next:"Next ›",tapVerse:"Tap a verse to select it.",
+faqTitle:"The 150 most common questions in Bible study",faqIntro:"Organized by topic and book. Tap a question – your Companion answers it with Bible references.",faqSearch:"Search a question …",faqNone:"No question found. Just ask it in the chat!",back:"Back",continueChat:"Keep asking in the chat",translating:"Translating questions …",
+studyTitle:"The 7 questions for every Bible passage",studyIntro:"With these 7 questions you can open up any passage on your own. Choose a passage, read it slowly and go through the questions in order. Your notes stay saved on this device.",
+book:"Book",fromV:"Verse from",toV:"to",open:"Open passage",notes:"Your notes …",help:"Help from the Companion",choosePassage:"Choose a passage first.",
+settings:"Settings",language:"Language",autoLang:"Detected automatically from your location. You can change it any time.",textSize:"Text size",translationL:"Bible translation",reset:"Delete all data on this device",resetConfirm:"Delete chat, notes and saved answers?",close:"Close",
+explain:"Explain {ref} to me.",talkMsg:"Let's talk about {ref}. What does this passage mean for me today?",helpMsg:"Help me with question {n} of the 7 questions (“{q}”) for {ref}.",
+cats:["Understanding the Bible","Genesis to Deuteronomy","The history of Israel","Poetry and prophets","Jesus and the Gospels","Acts and the letters","Revelation and the end times","God, faith and salvation","Hard questions","The Bible in everyday life"],
+q7:[["What does it say?","Read slowly. Who appears, what happens, where and when? Which words repeat?"],["What is the context?","What comes before and after? Who is writing to whom, and in what situation?"],["What does it show me about God?","How does God (or Jesus) act here? Which quality becomes visible?"],["What does it show me about people?","Where do I recognize myself – in strength, weakness, a question or a fear?"],["Is there a promise, a command or a warning?","Underline it and put it in your own words."],["Where else does the Bible speak about this?","Connect the passage with others. How does it fit the big picture?"],["What do I take with me today?","One concrete step for today and a short prayer in response."]]},
+es:{appName:"Compañero Bíblico",online:"en línea · responde al instante",typing:"escribiendo …",tabChat:"Chat",tabToday:"Hoy",tabBible:"Biblia",tabFaq:"150 preguntas",tabStudy:"7 preguntas",
+welcome:"¡Hola! 👋 Soy tu **tutor bíblico personal**.\n\nPregúntame lo que quieras sobre tu estudio de la Biblia: un versículo, un personaje, un libro entero o qué significa un texto para tu día a día. Te respondo con las citas bíblicas para que las puedas consultar. Ninguna pregunta es demasiado pequeña.\n\n¿Por dónde empezamos?",
+placeholder:"Escribe tu pregunta …",suggestions:["¿Quién fue Melquisedec?","¿Por qué hay dos relatos de la creación?","¿Por dónde empiezo a leer la Biblia?","¿Qué significa la gracia?","Explícame el Salmo 23","¿Cómo oro cuando no tengo palabras?"],
+newChatConfirm:"¿Borrar este chat y empezar de nuevo?",errNet:"No pude responder en este momento. Revisa tu conexión a internet e inténtalo otra vez.",errCfg:"La app todavía no está conectada al servidor (CONFIG.API_URL está vacío).",
+loading:"Cargando …",verseOfDay:"Versículo del día",devotional:"Devocional del día",exercise:"Ejercicio para hoy",question:"Pregunta para reflexionar",prayer:"Oración",talkAbout:"Hablar de esto con tu tutor",preparing:"Preparando tu devocional de hoy …",
+ot:"Antiguo Testamento",nt:"Nuevo Testamento",chapter:"Capítulo",books:"Libros",askVerse:"Preguntar al tutor",copy:"Copiar",copied:"Copiado ✓",study7:"7 preguntas",readChapter:"Leer el capítulo completo",prev:"‹ Anterior",next:"Siguiente ›",tapVerse:"Toca un versículo para marcarlo.",
+faqTitle:"Las 150 preguntas más frecuentes al estudiar la Biblia",faqIntro:"Ordenadas por tema y libro. Toca una pregunta y tu tutor la responde con citas bíblicas.",faqSearch:"Buscar una pregunta …",faqNone:"No encontré esa pregunta. ¡Hazla directamente en el chat!",back:"Volver",continueChat:"Seguir preguntando en el chat",translating:"Traduciendo las preguntas …",
+studyTitle:"Las 7 preguntas para cada pasaje bíblico",studyIntro:"Con estas 7 preguntas puedes descubrir cualquier texto por tu cuenta. Elige un pasaje, léelo despacio y recorre las preguntas en orden. Tus notas quedan guardadas en este dispositivo.",
+book:"Libro",fromV:"Del versículo",toV:"al",open:"Abrir pasaje",notes:"Tus notas …",help:"Ayuda del tutor",choosePassage:"Primero elige un pasaje.",
+settings:"Ajustes",language:"Idioma",autoLang:"Detectado automáticamente según tu ubicación. Puedes cambiarlo cuando quieras.",textSize:"Tamaño de letra",translationL:"Traducción de la Biblia",reset:"Borrar todos los datos de este dispositivo",resetConfirm:"¿Borrar chat, notas y respuestas guardadas?",close:"Cerrar",
+explain:"Explícame {ref}.",talkMsg:"Hablemos de {ref}. ¿Qué significa este texto para mí hoy?",helpMsg:"Ayúdame con la pregunta {n} de las 7 preguntas («{q}») sobre {ref}.",
+cats:["Entender la Biblia","De Génesis a Deuteronomio","La historia de Israel","Poesía y profetas","Jesús y los Evangelios","Hechos y las cartas","Apocalipsis y el fin de los tiempos","Dios, fe y salvación","Preguntas difíciles","La Biblia en el día a día"],
+q7:[["¿Qué dice el texto?","Lee despacio. ¿Quién aparece, qué pasa, dónde y cuándo? ¿Qué palabras se repiten?"],["¿Cuál es el contexto?","¿Qué viene antes y después? ¿Quién escribe a quién y en qué situación?"],["¿Qué me muestra sobre Dios?","¿Cómo actúa Dios (o Jesús) aquí? ¿Qué cualidad se hace visible?"],["¿Qué me muestra sobre el ser humano?","¿Dónde me reconozco: en una fortaleza, una debilidad, una pregunta o un miedo?"],["¿Hay una promesa, un mandato o una advertencia?","Subráyalo y dilo con tus propias palabras."],["¿Dónde más habla la Biblia de esto?","Conecta el texto con otros pasajes. ¿Cómo encaja en el panorama completo?"],["¿Qué me llevo hoy?","Un paso concreto para hoy y una breve oración como respuesta."]]},
+pt:{appName:"Companheiro Bíblico",online:"online · responde na hora",typing:"digitando …",tabChat:"Chat",tabToday:"Hoje",tabBible:"Bíblia",tabFaq:"150 perguntas",tabStudy:"7 perguntas",
+welcome:"Olá! 👋 Eu sou o seu **tutor bíblico pessoal**.\n\nPergunte o que quiser sobre o seu estudo da Bíblia: um versículo, uma pessoa, um livro inteiro ou o que um texto significa para o seu dia a dia. Eu respondo com as referências bíblicas para você consultar. Nenhuma pergunta é pequena demais.\n\nPor onde começamos?",
+placeholder:"Escreva sua pergunta …",suggestions:["Quem foi Melquisedeque?","Por que existem dois relatos da criação?","Por onde começo a ler a Bíblia?","O que significa graça?","Explique o Salmo 23","Como oro quando me faltam palavras?"],
+newChatConfirm:"Apagar este chat e começar de novo?",errNet:"Não consegui responder agora. Verifique sua conexão e tente novamente.",errCfg:"O app ainda não está conectado ao servidor (CONFIG.API_URL está vazio).",
+loading:"Carregando …",verseOfDay:"Versículo do dia",devotional:"Devocional do dia",exercise:"Exercício para hoje",question:"Pergunta para refletir",prayer:"Oração",talkAbout:"Conversar sobre isso com o tutor",preparing:"Preparando o devocional de hoje …",
+ot:"Antigo Testamento",nt:"Novo Testamento",chapter:"Capítulo",books:"Livros",askVerse:"Perguntar ao tutor",copy:"Copiar",copied:"Copiado ✓",study7:"7 perguntas",readChapter:"Ler o capítulo inteiro",prev:"‹ Anterior",next:"Próximo ›",tapVerse:"Toque num versículo para marcá-lo.",
+faqTitle:"As 150 perguntas mais comuns no estudo da Bíblia",faqIntro:"Organizadas por tema e livro. Toque numa pergunta e o seu tutor responde com referências bíblicas.",faqSearch:"Buscar uma pergunta …",faqNone:"Nenhuma pergunta encontrada. Faça-a direto no chat!",back:"Voltar",continueChat:"Continuar perguntando no chat",translating:"Traduzindo as perguntas …",
+studyTitle:"As 7 perguntas para cada passagem bíblica",studyIntro:"Com estas 7 perguntas você pode descobrir qualquer texto sozinho. Escolha uma passagem, leia devagar e passe pelas perguntas em ordem. Suas anotações ficam salvas neste aparelho.",
+book:"Livro",fromV:"Do versículo",toV:"ao",open:"Abrir passagem",notes:"Suas anotações …",help:"Ajuda do tutor",choosePassage:"Escolha uma passagem primeiro.",
+settings:"Configurações",language:"Idioma",autoLang:"Detectado automaticamente pela sua localização. Você pode mudar quando quiser.",textSize:"Tamanho do texto",translationL:"Tradução da Bíblia",reset:"Apagar todos os dados deste aparelho",resetConfirm:"Apagar chat, anotações e respostas salvas?",close:"Fechar",
+explain:"Explique {ref} para mim.",talkMsg:"Vamos conversar sobre {ref}. O que este texto significa para mim hoje?",helpMsg:"Me ajude com a pergunta {n} das 7 perguntas (“{q}”) sobre {ref}.",
+cats:["Entender a Bíblia","De Gênesis a Deuteronômio","A história de Israel","Poesia e profetas","Jesus e os Evangelhos","Atos e as cartas","Apocalipse e o fim dos tempos","Deus, fé e salvação","Perguntas difíceis","A Bíblia no dia a dia"],
+q7:[["O que o texto diz?","Leia devagar. Quem aparece, o que acontece, onde e quando? Que palavras se repetem?"],["Qual é o contexto?","O que vem antes e depois? Quem escreve para quem e em que situação?"],["O que ele me mostra sobre Deus?","Como Deus (ou Jesus) age aqui? Que qualidade fica visível?"],["O que ele me mostra sobre o ser humano?","Onde eu me reconheço: numa força, fraqueza, pergunta ou medo?"],["Há uma promessa, uma ordem ou um alerta?","Sublinhe e diga com suas próprias palavras."],["Onde mais a Bíblia fala sobre isso?","Ligue o texto a outras passagens. Como ele se encaixa no todo?"],["O que levo comigo hoje?","Um passo concreto para hoje e uma breve oração como resposta."]]},
+fr:{appName:"Compagnon Biblique",online:"en ligne · répond tout de suite",typing:"écrit …",tabChat:"Chat",tabToday:"Aujourd’hui",tabBible:"Bible",tabFaq:"150 questions",tabStudy:"7 questions",
+welcome:"Bonjour ! 👋 Je suis ton **compagnon biblique personnel**.\n\nPose-moi toutes tes questions sur ton étude de la Bible : un verset, un personnage, un livre entier ou ce qu’un texte signifie pour ton quotidien. Je réponds avec les références bibliques pour que tu puisses les consulter. Aucune question n’est trop petite.\n\nPar quoi commençons-nous ?",
+placeholder:"Écris ta question …",suggestions:["Qui était Melchisédek ?","Pourquoi y a-t-il deux récits de la création ?","Par où commencer à lire la Bible ?","Que signifie la grâce ?","Explique-moi le Psaume 23","Comment prier quand je n’ai pas de mots ?"],
+newChatConfirm:"Effacer ce chat et recommencer ?",errNet:"Je n’ai pas pu répondre. Vérifie ta connexion internet et réessaie.",errCfg:"L’app n’est pas encore connectée au serveur (CONFIG.API_URL est vide).",
+loading:"Chargement …",verseOfDay:"Verset du jour",devotional:"Méditation du jour",exercise:"Exercice pour aujourd’hui",question:"Question pour réfléchir",prayer:"Prière",talkAbout:"En parler avec le compagnon",preparing:"Préparation de ta méditation du jour …",
+ot:"Ancien Testament",nt:"Nouveau Testament",chapter:"Chapitre",books:"Livres",askVerse:"Demander au compagnon",copy:"Copier",copied:"Copié ✓",study7:"7 questions",readChapter:"Lire tout le chapitre",prev:"‹ Précédent",next:"Suivant ›",tapVerse:"Touche un verset pour le marquer.",
+faqTitle:"Les 150 questions les plus fréquentes dans l’étude de la Bible",faqIntro:"Classées par thème et par livre. Touche une question : ton compagnon y répond avec des références bibliques.",faqSearch:"Chercher une question …",faqNone:"Aucune question trouvée. Pose-la directement dans le chat !",back:"Retour",continueChat:"Continuer dans le chat",translating:"Traduction des questions …",
+studyTitle:"Les 7 questions pour chaque passage biblique",studyIntro:"Avec ces 7 questions, tu peux découvrir n’importe quel texte par toi-même. Choisis un passage, lis-le lentement et parcours les questions dans l’ordre. Tes notes restent enregistrées sur cet appareil.",
+book:"Livre",fromV:"Du verset",toV:"au",open:"Ouvrir le passage",notes:"Tes notes …",help:"Aide du compagnon",choosePassage:"Choisis d’abord un passage.",
+settings:"Réglages",language:"Langue",autoLang:"Détectée automatiquement selon ta position. Tu peux la changer quand tu veux.",textSize:"Taille du texte",translationL:"Traduction de la Bible",reset:"Effacer toutes les données de cet appareil",resetConfirm:"Effacer le chat, les notes et les réponses enregistrées ?",close:"Fermer",
+explain:"Explique-moi {ref}.",talkMsg:"Parlons de {ref}. Que signifie ce texte pour moi aujourd’hui ?",helpMsg:"Aide-moi avec la question {n} des 7 questions (« {q} ») sur {ref}.",
+cats:["Comprendre la Bible","De la Genèse au Deutéronome","L’histoire d’Israël","Poésie et prophètes","Jésus et les Évangiles","Les Actes et les lettres","L’Apocalypse et la fin des temps","Dieu, la foi et le salut","Questions difficiles","La Bible au quotidien"],
+q7:[["Que dit le texte ?","Lis lentement. Qui apparaît, que se passe-t-il, où et quand ? Quels mots se répètent ?"],["Quel est le contexte ?","Qu’est-ce qui vient avant et après ? Qui écrit à qui, et dans quelle situation ?"],["Que me montre-t-il sur Dieu ?","Comment Dieu (ou Jésus) agit-il ici ? Quelle qualité devient visible ?"],["Que me montre-t-il sur l’être humain ?","Où est-ce que je me reconnais : une force, une faiblesse, une question, une peur ?"],["Y a-t-il une promesse, un commandement ou un avertissement ?","Souligne-le et reformule-le avec tes mots."],["Où la Bible en parle-t-elle encore ?","Relie le texte à d’autres passages. Comment s’inscrit-il dans l’ensemble ?"],["Qu’est-ce que je retiens aujourd’hui ?","Un pas concret pour aujourd’hui et une courte prière en réponse."]]},
+it:{appName:"Compagno Biblico",online:"online · risponde subito",typing:"sta scrivendo …",tabChat:"Chat",tabToday:"Oggi",tabBible:"Bibbia",tabFaq:"150 domande",tabStudy:"7 domande",
+welcome:"Ciao! 👋 Sono il tuo **compagno biblico personale**.\n\nChiedimi tutto sul tuo studio della Bibbia: un versetto, un personaggio, un libro intero o cosa significa un testo per la tua vita di ogni giorno. Rispondo con i riferimenti biblici da consultare. Nessuna domanda è troppo piccola.\n\nDa dove cominciamo?",
+placeholder:"Scrivi la tua domanda …",suggestions:["Chi era Melchisedec?","Perché ci sono due racconti della creazione?","Da dove comincio a leggere la Bibbia?","Che cosa significa grazia?","Spiegami il Salmo 23","Come prego quando mi mancano le parole?"],
+newChatConfirm:"Cancellare questa chat e ricominciare?",errNet:"Non sono riuscito a rispondere. Controlla la connessione e riprova.",errCfg:"L’app non è ancora collegata al server (CONFIG.API_URL è vuoto).",
+loading:"Caricamento …",verseOfDay:"Versetto del giorno",devotional:"Meditazione del giorno",exercise:"Esercizio per oggi",question:"Domanda per riflettere",prayer:"Preghiera",talkAbout:"Parlane con il compagno",preparing:"Sto preparando la meditazione di oggi …",
+ot:"Antico Testamento",nt:"Nuovo Testamento",chapter:"Capitolo",books:"Libri",askVerse:"Chiedi al compagno",copy:"Copia",copied:"Copiato ✓",study7:"7 domande",readChapter:"Leggi tutto il capitolo",prev:"‹ Indietro",next:"Avanti ›",tapVerse:"Tocca un versetto per evidenziarlo.",
+faqTitle:"Le 150 domande più frequenti nello studio della Bibbia",faqIntro:"Ordinate per tema e per libro. Tocca una domanda: il tuo compagno risponde con riferimenti biblici.",faqSearch:"Cerca una domanda …",faqNone:"Nessuna domanda trovata. Falla direttamente in chat!",back:"Indietro",continueChat:"Continua in chat",translating:"Traduzione delle domande …",
+studyTitle:"Le 7 domande per ogni brano biblico",studyIntro:"Con queste 7 domande puoi scoprire qualsiasi testo da solo. Scegli un brano, leggilo lentamente e segui le domande in ordine. Le tue note restano salvate su questo dispositivo.",
+book:"Libro",fromV:"Dal versetto",toV:"al",open:"Apri il brano",notes:"Le tue note …",help:"Aiuto dal compagno",choosePassage:"Scegli prima un brano.",
+settings:"Impostazioni",language:"Lingua",autoLang:"Rilevata automaticamente dalla tua posizione. Puoi cambiarla quando vuoi.",textSize:"Dimensione del testo",translationL:"Traduzione della Bibbia",reset:"Cancella tutti i dati su questo dispositivo",resetConfirm:"Cancellare chat, note e risposte salvate?",close:"Chiudi",
+explain:"Spiegami {ref}.",talkMsg:"Parliamo di {ref}. Che cosa significa questo testo per me oggi?",helpMsg:"Aiutami con la domanda {n} delle 7 domande («{q}») su {ref}.",
+cats:["Capire la Bibbia","Da Genesi a Deuteronomio","La storia d’Israele","Poesia e profeti","Gesù e i Vangeli","Atti e le lettere","Apocalisse e fine dei tempi","Dio, fede e salvezza","Domande difficili","La Bibbia nella vita di ogni giorno"],
+q7:[["Che cosa dice il testo?","Leggi lentamente. Chi compare, che cosa succede, dove e quando? Quali parole si ripetono?"],["Qual è il contesto?","Che cosa viene prima e dopo? Chi scrive a chi, e in quale situazione?"],["Che cosa mi mostra su Dio?","Come agisce Dio (o Gesù) qui? Quale qualità diventa visibile?"],["Che cosa mi mostra sull’essere umano?","Dove mi riconosco: in una forza, una debolezza, una domanda o una paura?"],["C’è una promessa, un comando o un avvertimento?","Sottolinealo e dillo con parole tue."],["Dove ne parla ancora la Bibbia?","Collega il testo ad altri passi. Come si inserisce nel quadro generale?"],["Che cosa porto con me oggi?","Un passo concreto per oggi e una breve preghiera come risposta."]]}
+};
+
+/* 150 preguntas: [alemán, inglés] por categoría. Otros idiomas se traducen una vez y se guardan. */
+var FAQ = [
+[["Wie ist die Bibel entstanden?","How did the Bible come to be?"],["Warum hat die Bibel zwei Testamente?","Why does the Bible have two testaments?"],["Wer hat entschieden, welche Bücher in die Bibel gehören?","Who decided which books belong in the Bible?"],["Warum haben katholische Bibeln mehr Bücher?","Why do Catholic Bibles have more books?"],["In welchen Sprachen wurde die Bibel ursprünglich geschrieben?","In which languages was the Bible originally written?"],["Welche Bibelübersetzung ist gut für Anfänger?","Which Bible translation is good for beginners?"],["Womit fange ich am besten an zu lesen?","Where is the best place to start reading?"],["Muss ich die Bibel von vorne nach hinten lesen?","Do I have to read the Bible from front to back?"],["Wie lese ich einen Bibelvers im Zusammenhang?","How do I read a verse in its context?"],["Was bedeuten die Kapitel- und Versnummern?","What do the chapter and verse numbers mean?"],["Ist alles in der Bibel wörtlich gemeint?","Is everything in the Bible meant literally?"],["Wie gehe ich mit Stellen um, die ich nicht verstehe?","How do I deal with passages I don’t understand?"],["Gibt es Widersprüche in der Bibel?","Are there contradictions in the Bible?"],["Wie zuverlässig sind die alten Handschriften?","How reliable are the ancient manuscripts?"],["Was sind die Schriftrollen vom Toten Meer?","What are the Dead Sea Scrolls?"]],
+[["Warum gibt es zwei Schöpfungsberichte?","Why are there two creation accounts?"],["Was bedeutet „Ebenbild Gottes“?","What does “image of God” mean?"],["Was war der Sündenfall und was bedeutet er für uns?","What was the Fall and what does it mean for us?"],["Woher hatte Kain seine Frau?","Where did Cain get his wife?"],["Wer war Melchisedek?","Who was Melchizedek?"],["Was war die Sintflut – und gab es sie wirklich?","What was the Flood – and did it really happen?"],["Warum ist Abraham so wichtig?","Why is Abraham so important?"],["Warum sollte Abraham Isaak opfern?","Why was Abraham asked to sacrifice Isaac?"],["Was ist ein Bund in der Bibel?","What is a covenant in the Bible?"],["Wer war Josef und was lehrt uns seine Geschichte?","Who was Joseph and what does his story teach us?"],["Was bedeutet der Auszug aus Ägypten?","What is the meaning of the Exodus?"],["Was bedeutet der Gottesname „Ich bin, der ich bin“?","What does God’s name “I am who I am” mean?"],["Gelten die Zehn Gebote heute noch?","Do the Ten Commandments still apply today?"],["Warum gibt es so viele Opfergesetze im 3. Buch Mose?","Why are there so many sacrifice laws in Leviticus?"],["Was war die Stiftshütte?","What was the tabernacle?"]],
+[["Warum musste Israel das Land Kanaan erobern?","Why did Israel have to conquer Canaan?"],["Wer waren die Richter?","Who were the judges?"],["Was lehrt uns die Geschichte von Rut?","What does the story of Ruth teach us?"],["Warum wollte Israel einen König?","Why did Israel want a king?"],["Warum wurde Saul verworfen?","Why was Saul rejected?"],["Warum heißt David „ein Mann nach Gottes Herzen“, obwohl er schwer sündigte?","Why is David called “a man after God’s heart” although he sinned badly?"],["Was ist der Bund mit David?","What is the covenant with David?"],["Wie weise war Salomo wirklich – und was ging schief?","How wise was Solomon really – and what went wrong?"],["Warum wurde das Reich in Israel und Juda geteilt?","Why was the kingdom split into Israel and Judah?"],["Wer war Elia?","Who was Elijah?"],["Was war das babylonische Exil?","What was the Babylonian exile?"],["Was berichten Esra und Nehemia?","What do Ezra and Nehemiah tell us?"],["Warum wird Gott im Buch Ester nicht erwähnt?","Why is God not mentioned in the book of Esther?"],["Warum gibt es die Chronikbücher, wenn es schon die Königsbücher gibt?","Why are there Chronicles if we already have Kings?"],["Wie gehe ich mit der Gewalt im Alten Testament um?","How should I deal with the violence in the Old Testament?"]],
+[["Worum geht es im Buch Hiob?","What is the book of Job about?"],["Warum lässt Gott Hiob leiden?","Why does God allow Job to suffer?"],["Wie lese ich die Psalmen richtig?","How should I read the Psalms?"],["Warum gibt es Klage- und Rachepsalmen?","Why are there psalms of lament and revenge?"],["Was bedeutet „Furcht des Herrn“?","What does “the fear of the Lord” mean?"],["Sind die Sprüche Versprechen oder Lebensweisheiten?","Are the Proverbs promises or wisdom sayings?"],["Warum klingt der Prediger so pessimistisch?","Why does Ecclesiastes sound so pessimistic?"],["Was ist das Hohelied und warum steht es in der Bibel?","What is the Song of Songs and why is it in the Bible?"],["Was ist ein Prophet?","What is a prophet?"],["Welche Prophezeiungen über den Messias gibt es?","What prophecies about the Messiah are there?"],["Wer ist der leidende Gottesknecht in Jesaja 53?","Who is the suffering servant in Isaiah 53?"],["Was ist der neue Bund in Jeremia 31?","What is the new covenant in Jeremiah 31?"],["Was bedeuten die Visionen im Buch Daniel?","What do the visions in the book of Daniel mean?"],["Was lehrt uns Jona?","What does Jonah teach us?"],["Wer sind die zwölf kleinen Propheten?","Who are the twelve minor prophets?"]],
+[["Warum gibt es vier Evangelien?","Why are there four Gospels?"],["Warum unterscheiden sich die Evangelien in Details?","Why do the Gospels differ in details?"],["Hat Jesus wirklich gelebt?","Did Jesus really live?"],["Warum unterscheiden sich die Stammbäume Jesu?","Why are Jesus’ genealogies different?"],["Was bedeuten „Sohn Gottes“ und „Menschensohn“?","What do “Son of God” and “Son of Man” mean?"],["Was ist das Reich Gottes?","What is the Kingdom of God?"],["Warum sprach Jesus in Gleichnissen?","Why did Jesus speak in parables?"],["Was bedeutet die Bergpredigt für heute?","What does the Sermon on the Mount mean for today?"],["Wie ist „Halte die andere Wange hin“ gemeint?","What does “turn the other cheek” mean?"],["Was bedeuten die Wunder Jesu?","What do Jesus’ miracles mean?"],["Wer waren die Pharisäer und Sadduzäer?","Who were the Pharisees and Sadducees?"],["Warum musste Jesus sterben?","Why did Jesus have to die?"],["Was geschah beim letzten Abendmahl?","What happened at the Last Supper?"],["Welche Belege gibt es für die Auferstehung?","What evidence is there for the resurrection?"],["Was bedeutet „Ich bin der Weg, die Wahrheit und das Leben“?","What does “I am the way, the truth and the life” mean?"]],
+[["Was geschah an Pfingsten?","What happened at Pentecost?"],["Wie wurde aus Saulus Paulus?","How did Saul become Paul?"],["Wie lebte die erste Gemeinde?","How did the first church live?"],["Warum stritten die ersten Christen über das Gesetz?","Why did the first Christians argue about the Law?"],["Worum geht es im Römerbrief?","What is the Letter to the Romans about?"],["Was bedeutet „aus Gnade durch Glauben“?","What does “by grace through faith” mean?"],["Widersprechen sich Paulus und Jakobus bei Glaube und Werken?","Do Paul and James contradict each other on faith and works?"],["Was ist die Frucht des Geistes?","What is the fruit of the Spirit?"],["Was sind die Gaben des Geistes?","What are the gifts of the Spirit?"],["Was meint Paulus mit „Fleisch“ und „Geist“?","What does Paul mean by “flesh” and “spirit”?"],["Was ist die Waffenrüstung Gottes?","What is the armor of God?"],["Was sagt das Hohelied der Liebe in 1. Korinther 13?","What does the love chapter in 1 Corinthians 13 say?"],["Wer schrieb den Hebräerbrief?","Who wrote the Letter to the Hebrews?"],["Wie sind die Aussagen von Paulus über Frauen zu verstehen?","How should we understand Paul’s statements about women?"],["Warum sind die Briefe für Christen heute so wichtig?","Why are the letters so important for Christians today?"]],
+[["Wie soll man die Offenbarung lesen?","How should one read Revelation?"],["Wer schrieb die Offenbarung und wann?","Who wrote Revelation and when?"],["Was bedeuten die sieben Gemeinden?","What do the seven churches mean?"],["Was bedeutet die Zahl 666?","What does the number 666 mean?"],["Wer ist der Antichrist?","Who is the Antichrist?"],["Was ist das Tausendjährige Reich?","What is the millennium?"],["Was ist die Entrückung?","What is the rapture?"],["Was ist Harmagedon?","What is Armageddon?"],["Was sagt die Bibel über die Wiederkunft Jesu?","What does the Bible say about Jesus’ return?"],["Kann man das Ende der Welt berechnen?","Can we calculate the end of the world?"],["Was passiert nach dem Tod?","What happens after death?"],["Was sagt die Bibel über den Himmel?","What does the Bible say about heaven?"],["Was sagt die Bibel über die Hölle?","What does the Bible say about hell?"],["Was ist das neue Jerusalem?","What is the new Jerusalem?"],["Warum sind Zahlen und Symbole in der Bibel so wichtig?","Why are numbers and symbols so important in the Bible?"]],
+[["Was ist die Dreieinigkeit?","What is the Trinity?"],["Wer ist der Heilige Geist?","Who is the Holy Spirit?"],["Was ist Sünde?","What is sin?"],["Was bedeutet Gnade?","What does grace mean?"],["Was bedeutet es, gerettet zu sein?","What does it mean to be saved?"],["Kann ich mein Heil verlieren?","Can I lose my salvation?"],["Was ist Buße?","What is repentance?"],["Was bedeutet die Taufe?","What does baptism mean?"],["Was ist das Abendmahl?","What is the Lord’s Supper?"],["Was sind Engel und Dämonen?","What are angels and demons?"],["Wer ist der Satan?","Who is Satan?"],["Was ist die Sünde, die nicht vergeben wird?","What is the unforgivable sin?"],["Hat Gott einen Plan für mein Leben?","Does God have a plan for my life?"],["Was bedeutet Vorherbestimmung?","What does predestination mean?"],["Warum ist die Gemeinde wichtig?","Why is the church important?"]],
+[["Warum lässt Gott Leid zu?","Why does God allow suffering?"],["Ist der Gott des Alten Testaments ein anderer als der des Neuen?","Is the God of the Old Testament different from the God of the New?"],["Was ist mit Menschen, die nie von Jesus gehört haben?","What about people who never heard of Jesus?"],["Passen Bibel und Wissenschaft zusammen?","Do the Bible and science fit together?"],["Wie alt ist die Erde laut Bibel?","How old is the earth according to the Bible?"],["Warum hatten Männer im Alten Testament mehrere Frauen?","Why did men in the Old Testament have several wives?"],["Was sagt die Bibel über Sklaverei?","What does the Bible say about slavery?"],["Warum verhärtete Gott das Herz des Pharao?","Why did God harden Pharaoh’s heart?"],["Was sagt die Bibel über Scheidung?","What does the Bible say about divorce?"],["Ist Zweifel eine Sünde?","Is doubt a sin?"],["Darf ich wütend auf Gott sein?","Am I allowed to be angry with God?"],["Was sagt die Bibel über Depression und Angst?","What does the Bible say about depression and anxiety?"],["Was sagt die Bibel über Geld und Reichtum?","What does the Bible say about money and wealth?"],["Ist Selbstliebe biblisch?","Is self-love biblical?"],["Was sagt die Bibel über andere Religionen?","What does the Bible say about other religions?"]],
+[["Wie fange ich an, jeden Tag in der Bibel zu lesen?","How do I start reading the Bible every day?"],["Wie bete ich, wenn mir die Worte fehlen?","How do I pray when I have no words?"],["Was ist das Vaterunser und wie bete ich es?","What is the Lord’s Prayer and how do I pray it?"],["Wie höre ich Gottes Stimme?","How do I hear God’s voice?"],["Wie lerne ich Bibelverse auswendig?","How do I memorize Bible verses?"],["Wie führe ich ein Bibel-Tagebuch?","How do I keep a Bible journal?"],["Wie vergebe ich jemandem, der mich verletzt hat?","How do I forgive someone who hurt me?"],["Was sagt die Bibel über Sorgen?","What does the Bible say about worry?"],["Welche Verse helfen bei Angst?","Which verses help with fear?"],["Welche Verse trösten in der Trauer?","Which verses comfort in grief?"],["Was sagt die Bibel über Ehe und Familie?","What does the Bible say about marriage and family?"],["Wie erkläre ich die Bibel meinen Kindern?","How do I explain the Bible to my children?"],["Was bedeutet der Ruhetag für mich?","What does the day of rest mean for me?"],["Wie finde ich eine gute Gemeinde?","How do I find a good church?"],["Wie spreche ich mit anderen über meinen Glauben?","How do I talk with others about my faith?"]]
+];
+
+/* Versículos del día (libro:capítulo:versículos, numeración protestante 1-66) */
+var VOTD = ["43:3:16","19:23:1-4","20:3:5-6","23:41:10","24:29:11","45:8:28","50:4:6-7","50:4:13","40:11:28-30","19:46:2","6:1:9","23:40:31","45:12:2","46:13:4-7","48:5:22-23","49:2:8-9","62:1:9","58:11:1","59:1:5","60:5:7","19:119:105","19:139:13-14","19:34:19","25:3:22-23","33:6:8","40:6:33-34","40:5:14-16","43:14:27","43:15:5","43:8:12","43:11:25","45:5:8","45:15:13","47:5:17","47:12:9","51:3:23","55:1:7","58:4:16","19:91:1-2","19:37:4-5","19:27:1","19:121:1-2","20:16:3","21:3:1","5:31:6","4:6:24-26","1:1:1","2:14:14","36:3:17","42:6:31","42:1:37","44:1:8","62:4:18","66:21:4","43:16:33","41:9:24","40:28:20","58:12:1-2","19:103:2-4","23:43:1","19:16:11","45:8:38-39"];
+
+var COUNTRY_LANG = {DE:"de",AT:"de",CH:"de",LI:"de",LU:"de",
+ES:"es",MX:"es",AR:"es",CO:"es",CL:"es",PE:"es",VE:"es",EC:"es",GT:"es",CU:"es",BO:"es",DO:"es",HN:"es",PY:"es",SV:"es",NI:"es",CR:"es",PA:"es",UY:"es",PR:"es",GQ:"es",
+BR:"pt",PT:"pt",AO:"pt",MZ:"pt",CV:"pt",GW:"pt",ST:"pt",TL:"pt",
+FR:"fr",BE:"fr",MC:"fr",SN:"fr",CI:"fr",CM:"fr",ML:"fr",BF:"fr",NE:"fr",TG:"fr",BJ:"fr",GA:"fr",CG:"fr",CD:"fr",HT:"fr",MG:"fr",RW:"fr",BI:"fr",TD:"fr",GN:"fr",
+IT:"it",SM:"it",VA:"it"};
+
+/* ---------- utilidades ---------- */
+var $ = function(id){return document.getElementById(id)};
+var store = {
+  get:function(k,d){try{var v=localStorage.getItem("bb_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set:function(k,v){try{localStorage.setItem("bb_"+k,JSON.stringify(v))}catch(e){}},
+  clear:function(){try{Object.keys(localStorage).forEach(function(k){if(k.indexOf("bb_")===0)localStorage.removeItem(k)})}catch(e){}}
+};
+var S = {lang:"de",autoLang:true,bible:null,bibles:{},msgs:[],busy:false,tab:"chat",reader:{b:null,c:null,sel:[]},study:null,faqQ:{}};
+
+function t(k){var L=T[S.lang]||T.en;return L[k]!=null?L[k]:(T.en[k]!=null?T.en[k]:k)}
+function fmt(s,o){return s.replace(/\{(\w+)\}/g,function(_,k){return o[k]!=null?o[k]:""})}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function toast(msg){var el=$("toast");el.textContent=msg;el.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(function(){el.classList.remove("on")},1600)}
+function nowTime(){var d=new Date();return d.getHours()+":"+String(d.getMinutes()).padStart(2,"0")}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function copyText(s){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(function(){toast(t("copied"))},fallback)}else fallback();
+  function fallback(){var ta=document.createElement("textarea");ta.value=s;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast(t("copied"))}catch(e){}ta.remove()}
+}
+
+/* ---------- idioma ---------- */
+function fetchTimeout(url,ms){return new Promise(function(res,rej){var tm=setTimeout(function(){rej(new Error("timeout"))},ms);fetch(url).then(function(r){clearTimeout(tm);res(r)},function(e){clearTimeout(tm);rej(e)})})}
+function langFromBrowser(){var ls=navigator.languages||[navigator.language||""];for(var i=0;i<ls.length;i++){var l=(ls[i]||"").slice(0,2).toLowerCase();if(LANGS.indexOf(l)>=0)return l}return null}
+function detectLang(){
+  var q=new URLSearchParams(location.search).get("lang");
+  if(q&&LANGS.indexOf(q)>=0)return Promise.resolve({lang:q,auto:false});
+  var saved=store.get("lang",null);
+  if(saved&&LANGS.indexOf(saved)>=0)return Promise.resolve({lang:saved,auto:false});
+  var cached=store.get("ipLang",null);
+  if(cached)return Promise.resolve({lang:cached,auto:true});
+  function fromCountry(cc){cc=(cc||"").toUpperCase();return COUNTRY_LANG[cc]||(cc?"en":null)}
+  return fetchTimeout("https://ipapi.co/country/",2500).then(function(r){return r.ok?r.text():""})
+    .catch(function(){return fetchTimeout("https://get.geojs.io/v1/ip/country",2500).then(function(r){return r.ok?r.text():""})})
+    .catch(function(){return ""})
+    .then(function(cc){var l=fromCountry(String(cc).trim().slice(0,2))||langFromBrowser()||CONFIG.DEFAULT_LANG;store.set("ipLang",l);return{lang:l,auto:true}});
+}
+function setLang(l,manual){
+  S.lang=l;document.documentElement.lang=l;
+  if(manual){S.autoLang=false;store.set("lang",l)}
+  S.msgs=store.get("chat_"+l,[]);
+  document.querySelectorAll("[data-t]").forEach(function(el){el.textContent=t(el.getAttribute("data-t"))});
+  $("input").placeholder=t("placeholder");
+  document.title=t("appName");
+  S.reader={b:null,c:null,sel:[]};S.study=null;S.studyPick=null;S.chatContext="";
+  renderHeader();renderChat();renderChips();
+  loadBible(l).then(function(){renderChat();renderAll()});
+  renderAll();
+}
+
+/* ---------- Biblia ---------- */
+function loadBible(l){
+  if(S.bibles[l]){S.bible=S.bibles[l];return Promise.resolve(S.bible)}
+  S.bible=null;
+  return fetch(CONFIG.BIBLE_BASE+l+".json").then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+    .then(function(d){S.bibles[l]=d;if(S.lang===l)S.bible=d;return d})
+    .catch(function(e){console.warn("Bible load failed",e);return null});
+}
+function bookName(b){return S.bible&&S.bible.books[b-1]?S.bible.books[b-1].n:("#"+b)}
+function parseRef(s){var m=String(s).match(/^(\d{1,2}):(\d{1,3})(?::(\d{1,3})(?:-(\d{1,3}))?)?$/);if(!m)return null;var r={b:+m[1],c:+m[2],v1:m[3]?+m[3]:null,v2:m[4]?+m[4]:(m[3]?+m[3]:null)};if(r.b<1||r.b>66)return null;return r}
+function refKey(r){return r.b+":"+r.c+(r.v1?":"+r.v1+(r.v2&&r.v2!==r.v1?"-"+r.v2:""):"")}
+function refLabel(r){var sep=S.lang==="de"?",":":";return bookName(r.b)+" "+r.c+(r.v1?sep+r.v1+(r.v2&&r.v2!==r.v1?"–"+r.v2:""):"")}
+function chapterVerses(b,c){if(!S.bible)return null;var bk=S.bible.books[b-1];return bk&&bk.c[c-1]?bk.c[c-1]:null}
+function refVerses(r){var ch=chapterVerses(r.b,r.c);if(!ch)return [];var a=r.v1||1,z=r.v2||ch.length;var out=[];for(var i=a;i<=Math.min(z,ch.length);i++)out.push({n:i,t:ch[i-1]});return out}
+function refPlain(r){return refVerses(r).map(function(v){return v.n+" "+v.t}).join(" ")}
+
+/* ---------- texto enriquecido ---------- */
+function rich(text){
+  var h=esc(text||"");
+  h=h.replace(/\[\[(\d{1,2}:\d{1,3}(?::\d{1,3}(?:-\d{1,3})?)?)\]\]/g,function(_,k){var r=parseRef(k);return r?'<button class="ref" data-ref="'+refKey(r)+'">'+esc(refLabel(r))+'</button>':""});
+  h=h.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+  var blocks=h.split(/\n{2,}/),out="";
+  blocks.forEach(function(bl){
+    var lines=bl.split("\n");
+    if(lines.every(function(l){return /^\s*([-•*]|\d+\.)\s+/.test(l)||!l.trim()})){
+      out+="<ul>"+lines.filter(function(l){return l.trim()}).map(function(l){return"<li>"+l.replace(/^\s*([-•*]|\d+\.)\s+/,"")+"</li>"}).join("")+"</ul>";
+    }else{
+      var buf=[],list=[];
+      lines.forEach(function(l){if(/^\s*[-•*]\s+/.test(l)){list.push(l.replace(/^\s*[-•*]\s+/,""))}else{if(list.length){buf.push("<ul><li>"+list.join("</li><li>")+"</li></ul>");list=[]}buf.push(l)}});
+      if(list.length)buf.push("<ul><li>"+list.join("</li><li>")+"</li></ul>");
+      out+="<p>"+buf.join("<br>").replace(/<br><ul>/g,"<ul>").replace(/<\/ul><br>/g,"</ul>")+"</p>";
+    }
+  });
+  return out;
+}
+
+/* ---------- API ---------- */
+function api(body){
+  if(!CONFIG.API_URL)return Promise.reject(new Error("cfg"));
+  var h={"Content-Type":"application/json"};
+  if(CONFIG.API_KEY){h.Authorization="Bearer "+CONFIG.API_KEY;h.apikey=CONFIG.API_KEY}
+  body.lang=S.lang;
+  return fetch(CONFIG.API_URL,{method:"POST",headers:h,body:JSON.stringify(body)})
+    .then(function(r){return r.json().then(function(j){if(!r.ok||j.error)throw new Error(j.error||r.status);return j})});
+}
+function errText(e){return e&&e.message==="cfg"?t("errCfg"):t("errNet")}
+
+/* ---------- cabecera y pestañas ---------- */
+function renderHeader(){
+  var titles={chat:t("appName"),today:t("verseOfDay"),bible:t("tabBible"),faq:t("tabFaq"),study:t("tabStudy")};
+  $("hTitle").textContent=titles[S.tab];
+  $("hStatus").textContent=S.tab==="chat"?(S.busy?t("typing"):t("online")):t("appName");
+  $("btnNew").style.display=S.tab==="chat"?"":"none";
+}
+function go(tab){
+  S.tab=tab;
+  document.querySelectorAll(".view").forEach(function(v){v.classList.toggle("on",v.id==="v-"+tab)});
+  document.querySelectorAll("#tabs button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-tab")===tab)});
+  renderHeader();
+  if(tab!=="faq")$("faqPanel").classList.remove("on");
+  if(tab==="bible")updateSelbar();else $("selbar").classList.remove("on");
+  if(tab==="today")renderToday();
+  if(tab==="chat")scrollChat();
+}
+$("tabs").addEventListener("click",function(e){var b=e.target.closest("button[data-tab]");if(b)go(b.getAttribute("data-tab"))});
+
+/* ---------- chat ---------- */
+function renderChat(){
+  var html='<div class="day">'+esc(new Date().toLocaleDateString(S.lang,{weekday:"long",day:"numeric",month:"long"}))+'</div>';
+  html+='<div class="b bot">'+rich(t("welcome"))+'<span class="time">'+nowTime()+'</span></div>';
+  S.msgs.forEach(function(m){html+='<div class="b '+(m.role==="user"?"me":"bot")+(m.err?" err":"")+'">'+(m.role==="user"?"<p>"+esc(m.content).replace(/\n/g,"<br>")+"</p>":rich(m.content))+'<span class="time">'+esc(m.time||"")+'</span></div>'});
+  if(S.busy)html+='<div class="b bot"><span class="typing"><i></i><i></i><i></i></span></div>';
+  $("msgs").innerHTML=html;scrollChat();
+}
+function scrollChat(){var m=$("msgs");requestAnimationFrame(function(){m.scrollTop=m.scrollHeight})}
+function renderChips(){
+  var show=S.msgs.length<2;
+  $("chips").style.display=show?"":"none";
+  $("chips").innerHTML=t("suggestions").map(function(s){return'<button class="chip" type="button">'+esc(s)+'</button>'}).join("");
+}
+function saveChat(){store.set("chat_"+S.lang,S.msgs.filter(function(m){return!m.err}).slice(-60))}
+function send(text,context){
+  text=(text||"").trim();if(!text||S.busy)return;
+  if(S.tab!=="chat")go("chat");
+  if(context)S.chatContext=context;
+  S.msgs.push({role:"user",content:text,time:nowTime()});
+  S.busy=true;renderChat();renderChips();renderHeader();saveChat();
+  var hist=S.msgs.filter(function(m){return!m.err}).map(function(m){return{role:m.role,content:m.content}});
+  api({mode:"chat",messages:hist,context:context||S.chatContext||""}).then(function(j){
+    S.msgs.push({role:"assistant",content:j.reply,time:nowTime()});
+  }).catch(function(e){S.msgs.push({role:"assistant",content:errText(e),err:true,time:nowTime()})})
+  .then(function(){S.busy=false;saveChat();renderChat();renderHeader()});
+}
+$("composer").addEventListener("submit",function(e){e.preventDefault();var v=$("input").value;$("input").value="";autoGrow();send(v)});
+$("input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey&&window.matchMedia("(pointer:fine)").matches){e.preventDefault();$("composer").requestSubmit()}});
+function autoGrow(){var i=$("input");i.style.height="auto";i.style.height=Math.min(i.scrollHeight,130)+"px"}
+$("input").addEventListener("input",autoGrow);
+$("chips").addEventListener("click",function(e){var c=e.target.closest(".chip");if(c)send(c.textContent)});
+$("btnNew").addEventListener("click",function(){if(!S.msgs.length||confirm(t("newChatConfirm"))){S.msgs=[];S.chatContext="";saveChat();renderChat();renderChips()}});
+
+/* ---------- ventana de versículo ---------- */
+function openSheet(html){$("sheet").innerHTML='<div class="grab"></div>'+html;$("modal").classList.add("on")}
+function closeSheet(){$("modal").classList.remove("on")}
+$("modal").addEventListener("click",function(e){if(e.target.id==="modal"||e.target.closest("[data-close]"))closeSheet()});
+document.addEventListener("click",function(e){
+  var b=e.target.closest(".ref");if(!b)return;
+  var r=parseRef(b.getAttribute("data-ref"));if(!r)return;
+  var vv=refVerses(r);
+  var body=vv.length?vv.map(function(v){return'<span><sup class="muted">'+v.n+'</sup> '+esc(v.t)+'</span>'}).join(" "):'<span class="muted">'+t("loading")+'</span>';
+  openSheet('<div class="kicker">'+esc(S.bible?S.bible.name:"")+'</div><div class="h2">'+esc(refLabel(r))+'</div><div class="scripture">'+body+'</div>'+
+    '<button class="btn" data-goread="'+r.b+':'+r.c+'">'+t("readChapter")+'</button><button class="btn ghost" data-close>'+t("close")+'</button>');
+});
+$("sheet").addEventListener("click",function(e){var g=e.target.closest("[data-goread]");if(!g)return;var p=g.getAttribute("data-goread").split(":");closeSheet();S.reader={b:+p[0],c:+p[1],sel:[]};go("bible");renderBible()});
+
+/* ---------- Hoy ---------- */
+function dayIndex(){var d=new Date(),s=new Date(d.getFullYear(),0,0);return Math.floor((d-s)/864e5)}
+function renderToday(){
+  var el=$("today");
+  var r=parseRef(VOTD[dayIndex()%VOTD.length]);
+  if(!S.bible){el.innerHTML='<div class="loader">'+t("loading")+'</div>';return}
+  var txt=refVerses(r).map(function(v){return v.t}).join(" ");
+  var html='<div class="card votd"><div class="kicker">'+t("verseOfDay")+' · '+esc(new Date().toLocaleDateString(S.lang,{day:"numeric",month:"long"}))+'</div>'+
+    '<p class="scripture" style="margin-top:10px">„'+esc(txt)+'“</p><div class="ref-l">'+esc(refLabel(r))+'</div>'+
+    '<div class="row3"><button class="btn ghost" id="copyVotd" style="margin-top:12px">'+t("copy")+'</button><button class="btn ghost" data-goread="'+r.b+':'+r.c+'" id="readVotd" style="margin-top:12px">'+t("chapter")+'</button></div></div>';
+  html+='<div class="card dev" id="devCard"><div class="kicker">'+t("devotional")+'</div><div id="devBody"><p class="muted" style="margin-top:6px">'+t("preparing")+'</p><div class="skeleton"></div><div class="skeleton" style="width:80%"></div><div class="skeleton" style="width:60%"></div></div></div>';
+  el.innerHTML=html;
+  $("copyVotd").onclick=function(){copyText("„"+txt+"“ – "+refLabel(r))};
+  $("readVotd").onclick=function(){S.reader={b:r.b,c:r.c,sel:r.v1?range(r.v1,r.v2):[]};go("bible");renderBible()};
+  var key="dev_"+today()+"_"+S.lang,cached=store.get(key,null);
+  if(cached)return showDev(cached,r,txt);
+  api({mode:"devotional",ref:refLabel(r),text:txt}).then(function(j){store.set(key,j.devotional);if(S.tab==="today")showDev(j.devotional,r,txt)})
+    .catch(function(e){var b=$("devBody");if(b)b.innerHTML='<p class="muted" style="margin-top:6px">'+esc(errText(e))+'</p>'});
+}
+function showDev(d,r,txt){
+  var b=$("devBody");if(!b)return;
+  b.innerHTML='<div class="h2">'+esc(d.title||"")+'</div><div>'+rich(d.reflection||"")+'</div>'+
+    '<h3>✍️ '+t("exercise")+'</h3><div>'+rich(d.exercise||"")+'</div>'+
+    '<h3>💭 '+t("question")+'</h3><div>'+rich(d.question||"")+'</div>'+
+    '<h3>🙏 '+t("prayer")+'</h3><div><p style="font-style:italic">'+esc(d.prayer||"")+'</p></div>'+
+    '<button class="btn" id="talkDev">'+t("talkAbout")+'</button>';
+  $("talkDev").onclick=function(){send(fmt(t("talkMsg"),{ref:refLabel(r)}),refLabel(r)+": "+txt)};
+}
+function range(a,z){var o=[];for(var i=a;i<=(z||a);i++)o.push(i);return o}
+
+/* ---------- Biblia (lector) ---------- */
+function renderBible(){
+  var el=$("bible"),R=S.reader;$("selbar").classList.remove("on");
+  if(!S.bible){el.innerHTML='<div class="loader">'+t("loading")+'</div>';return}
+  if(!R.b){
+    var h="";
+    [[1,39,t("ot")],[40,66,t("nt")]].forEach(function(g){
+      h+='<div class="testament">'+g[2]+'</div><div class="grid-books">';
+      for(var i=g[0];i<=g[1];i++)h+='<button data-book="'+i+'">'+esc(bookName(i))+'</button>';
+      h+='</div>';
+    });
+    el.innerHTML='<div class="muted">'+esc(S.bible.name)+'</div>'+h;return;
+  }
+  var bk=S.bible.books[R.b-1];
+  if(!R.c){
+    var g='';for(var c=1;c<=bk.c.length;c++)g+='<button data-ch="'+c+'">'+c+'</button>';
+    el.innerHTML='<div class="crumbs"><button data-home>'+t("books")+'</button> › <strong>'+esc(bk.n)+'</strong></div><div class="grid-ch">'+g+'</div>';return;
+  }
+  var vs=bk.c[R.c-1]||[];
+  var v=vs.map(function(x,i){return'<span class="v'+(R.sel.indexOf(i+1)>=0?" sel":"")+'" data-v="'+(i+1)+'"><sup>'+(i+1)+'</sup>'+esc(x)+'</span> '}).join("");
+  el.innerHTML='<div class="crumbs"><button data-home>'+t("books")+'</button> › <button data-bookonly>'+esc(bk.n)+'</button> › <strong>'+t("chapter")+' '+R.c+'</strong></div>'+
+    '<p class="muted" style="margin-bottom:10px">'+t("tapVerse")+'</p><div class="reader">'+v+'</div>'+
+    '<div class="chnav"><button data-prev '+(R.b===1&&R.c===1?"disabled":"")+'>'+t("prev")+'</button><button data-next '+(R.b===66&&R.c===bk.c.length?"disabled":"")+'>'+t("next")+'</button></div>';
+  updateSelbar();
+  if(R.sel.length){var first=el.querySelector('.v[data-v="'+R.sel[0]+'"]');if(first)setTimeout(function(){first.scrollIntoView({block:"center"})},30)}else $("v-bible").scrollTop=0;
+}
+function selRef(){var R=S.reader,s=R.sel.slice().sort(function(a,b){return a-b});return s.length?{b:R.b,c:R.c,v1:s[0],v2:s[s.length-1]}:{b:R.b,c:R.c,v1:null,v2:null}}
+function updateSelbar(){
+  var bar=$("selbar");if(!S.reader.sel.length){bar.classList.remove("on");return}
+  bar.innerHTML='<button data-act="ask">'+t("askVerse")+'</button><button data-act="copy">'+t("copy")+'</button><button data-act="study">'+t("study7")+'</button>';
+  bar.classList.add("on");
+}
+$("bible").addEventListener("click",function(e){
+  var R=S.reader,x;
+  if(x=e.target.closest("[data-book]")){S.reader={b:+x.getAttribute("data-book"),c:null,sel:[]};renderBible();$("v-bible").scrollTop=0;return}
+  if(x=e.target.closest("[data-ch]")){R.c=+x.getAttribute("data-ch");R.sel=[];renderBible();return}
+  if(e.target.closest("[data-home]")){S.reader={b:null,c:null,sel:[]};renderBible();return}
+  if(e.target.closest("[data-bookonly]")){R.c=null;R.sel=[];renderBible();return}
+  if(e.target.closest("[data-prev]")){if(R.c>1)R.c--;else if(R.b>1){R.b--;R.c=S.bible.books[R.b-1].c.length}R.sel=[];renderBible();return}
+  if(e.target.closest("[data-next]")){if(R.c<S.bible.books[R.b-1].c.length)R.c++;else if(R.b<66){R.b++;R.c=1}R.sel=[];renderBible();return}
+  if(x=e.target.closest(".v")){var n=+x.getAttribute("data-v"),i=R.sel.indexOf(n);if(i>=0)R.sel.splice(i,1);else R.sel.push(n);x.classList.toggle("sel");updateSelbar()}
+});
+$("selbar").addEventListener("click",function(e){
+  var a=e.target.closest("[data-act]");if(!a)return;var r=selRef(),txt=refPlain(r);
+  if(a.getAttribute("data-act")==="ask")send(fmt(t("explain"),{ref:refLabel(r)}),refLabel(r)+": "+txt);
+  if(a.getAttribute("data-act")==="copy")copyText(txt+" – "+refLabel(r));
+  if(a.getAttribute("data-act")==="study"){S.study=r;go("study");renderStudy()}
+});
+
+/* ---------- 150 preguntas ---------- */
+function faqText(ci,qi){
+  if(S.lang==="de")return FAQ[ci][qi][0];
+  if(S.lang==="en")return FAQ[ci][qi][1];
+  var tr=S.faqQ[S.lang]||store.get("faqq_"+S.lang,null);
+  if(tr){S.faqQ[S.lang]=tr;var n=ci*15+qi;if(tr[n])return tr[n]}
+  return FAQ[ci][qi][1];
+}
+function ensureFaqTranslation(){
+  var failed=ensureFaqTranslation.failed||(ensureFaqTranslation.failed={});
+  if(S.lang==="de"||S.lang==="en"||S.faqQ[S.lang]||store.get("faqq_"+S.lang,null)||ensureFaqTranslation.busy||failed[S.lang])return false;
+  ensureFaqTranslation.busy=true;var lang=S.lang;
+  var items=[];FAQ.forEach(function(c){c.forEach(function(q){items.push(q[1])})});
+  // un solo intento por sesión: si falla, quedan las preguntas en inglés (las respuestas igual salen en el idioma elegido)
+  api({mode:"translate",items:items}).then(function(j){if(j.items&&j.items.length===items.length){store.set("faqq_"+lang,j.items);S.faqQ[lang]=j.items}else failed[lang]=true})
+    .catch(function(){failed[lang]=true}).then(function(){ensureFaqTranslation.busy=false;if(S.lang===lang)setTimeout(function(){renderFaq($("faqSearch")?$("faqSearch").value:"")},0)});
+  return true;
+}
+function renderFaq(filter){
+  var el=$("faq");filter=(filter||"").toLowerCase().trim();
+  var translating=ensureFaqTranslation()||ensureFaqTranslation.busy;
+  if(!el.querySelector(".search")){
+    el.innerHTML='<div class="kicker">'+t("tabFaq")+'</div><div class="h2">'+t("faqTitle")+'</div><p class="muted">'+t("faqIntro")+'</p>'+
+      '<input class="search" id="faqSearch" type="search" style="margin-top:12px"><div id="faqNote"></div><div id="faqList"></div>';
+    $("faqSearch").addEventListener("input",function(){renderFaq(this.value)});
+  }
+  $("faqSearch").placeholder=t("faqSearch");
+  $("faqNote").innerHTML=translating?'<p class="muted" style="margin-top:8px">⏳ '+t("translating")+'</p>':"";
+  var h="",found=0,num=0;
+  FAQ.forEach(function(cat,ci){
+    var items="",cnt=0;
+    cat.forEach(function(q,qi){num=ci*15+qi+1;var txt=faqText(ci,qi);if(filter&&txt.toLowerCase().indexOf(filter)<0)return;cnt++;items+='<button data-q="'+ci+'-'+qi+'"><span class="num">'+num+'.</span>'+esc(txt)+'</button>'});
+    if(!cnt)return;found+=cnt;
+    h+='<details class="cat"'+(filter?" open":"")+'><summary><span>'+esc(t("cats")[ci])+'</span><span class="n">'+cnt+'</span></summary><div class="qlist">'+items+'</div></details>';
+  });
+  $("faqList").innerHTML=found?h:'<p class="muted" style="margin-top:14px">'+t("faqNone")+'</p>';
+}
+$("faq").addEventListener("click",function(e){var b=e.target.closest("[data-q]");if(!b)return;var p=b.getAttribute("data-q").split("-");openFaq(+p[0],+p[1])});
+function openFaq(ci,qi){
+  var q=faqText(ci,qi),key="faqa_"+S.lang+"_"+ci+"_"+qi,cached=store.get(key,null);
+  var panel=$("faqPanel"),box=$("faqAnswer");panel.classList.add("on");panel.scrollTop=0;
+  function paint(ans,err){
+    box.innerHTML='<button class="back" data-back>‹ '+t("back")+'</button><div class="kicker">'+esc(t("cats")[ci])+' · '+(ci*15+qi+1)+'/150</div><div class="h2">'+esc(q)+'</div>'+
+      '<div class="card answer">'+(ans?rich(ans):(err?'<p class="muted">'+esc(err)+'</p>':'<span class="typing"><i></i><i></i><i></i></span>'))+'</div>'+
+      (ans?'<button class="btn" data-cont>'+t("continueChat")+'</button>':"");
+  }
+  paint(cached);
+  if(!cached)api({mode:"chat",messages:[{role:"user",content:q}]}).then(function(j){store.set(key,j.reply);paint(j.reply)}).catch(function(e){paint(null,errText(e))});
+  box.onclick=function(e){
+    if(e.target.closest("[data-back]"))panel.classList.remove("on");
+    if(e.target.closest("[data-cont]")){var a=store.get(key,"");S.msgs.push({role:"user",content:q,time:nowTime()},{role:"assistant",content:a,time:nowTime()});saveChat();panel.classList.remove("on");go("chat");renderChat();renderChips()}
+  };
+}
+
+/* ---------- 7 preguntas ---------- */
+function renderStudy(){
+  var el=$("study");
+  if(!S.bible){el.innerHTML='<div class="loader">'+t("loading")+'</div>';return}
+  var r=S.study||S.studyPick||{b:43,c:3,v1:1,v2:21};
+  var bk=S.bible.books[r.b-1],nv=bk.c[r.c-1].length;
+  var bopts="";for(var i=1;i<=66;i++)bopts+='<option value="'+i+'"'+(i===r.b?" selected":"")+'>'+esc(bookName(i))+'</option>';
+  var copts="";for(var c=1;c<=bk.c.length;c++)copts+='<option'+(c===r.c?" selected":"")+'>'+c+'</option>';
+  function vopts(sel){var o="";for(var v=1;v<=nv;v++)o+='<option'+(v===sel?" selected":"")+'>'+v+'</option>';return o}
+  var h='<div class="kicker">'+t("tabStudy")+'</div><div class="h2">'+t("studyTitle")+'</div><p class="muted">'+t("studyIntro")+'</p>'+
+    '<div class="card" style="margin-top:14px"><div class="row"><div><label class="l">'+t("book")+'</label><select id="sB">'+bopts+'</select></div><div><label class="l">'+t("chapter")+'</label><select id="sC">'+copts+'</select></div></div>'+
+    '<div class="row3"><div><label class="l">'+t("fromV")+'</label><select id="sV1">'+vopts(r.v1||1)+'</select></div><div><label class="l">'+t("toV")+'</label><select id="sV2">'+vopts(r.v2||nv)+'</select></div></div>'+
+    '<button class="btn" id="sOpen">'+t("open")+'</button></div>';
+  if(S.study){
+    var ref=refLabel(r),notes=store.get("notes_"+refKey(r),{});
+    h+='<div class="card" style="margin-top:14px"><div class="kicker">'+esc(S.bible.name)+'</div><div class="h2">'+esc(ref)+'</div><div class="passage scripture">'+refVerses(r).map(function(v){return'<sup class="muted">'+v.n+'</sup> '+esc(v.t)}).join(" ")+'</div></div>';
+    t("q7").forEach(function(q,i){
+      h+='<div class="card"><div class="q7"><div class="nr">'+(i+1)+'</div><div style="flex:1;min-width:0"><h4>'+esc(q[0])+'</h4><p class="muted">'+esc(q[1])+'</p>'+
+        '<textarea data-note="'+i+'" placeholder="'+esc(t("notes"))+'">'+esc(notes[i]||"")+'</textarea><button class="mini" data-help="'+i+'">💬 '+t("help")+'</button></div></div></div>';
+    });
+    h+='<div style="height:20px"></div>';
+  }
+  el.innerHTML=h;
+  // cambiar libro o capítulo solo actualiza el selector; el pasaje se abre con el botón
+  $("sB").onchange=function(){var b=+this.value;S.study=null;S.studyPick={b:b,c:1,v1:1,v2:S.bible.books[b-1].c[0].length};renderStudy()};
+  $("sC").onchange=function(){var b=+$("sB").value,c=+this.value;S.study=null;S.studyPick={b:b,c:c,v1:1,v2:S.bible.books[b-1].c[c-1].length};renderStudy()};
+  $("sOpen").onclick=function(){var b=+$("sB").value,c=+$("sC").value,a=+$("sV1").value,z=+$("sV2").value;if(z<a){var tmp=a;a=z;z=tmp}S.study={b:b,c:c,v1:a,v2:z};S.studyPick=S.study;renderStudy()};
+}
+$("study").addEventListener("input",function(e){var ta=e.target.closest("[data-note]");if(!ta||!S.study)return;var k="notes_"+refKey(S.study),n=store.get(k,{});n[ta.getAttribute("data-note")]=ta.value;store.set(k,n)});
+$("study").addEventListener("click",function(e){var b=e.target.closest("[data-help]");if(!b||!S.study)return;var i=+b.getAttribute("data-help"),q=t("q7")[i],r=S.study;
+  send(fmt(t("helpMsg"),{n:i+1,q:q[0],ref:refLabel(r)}),refLabel(r)+": "+refPlain(r))});
+
+/* ---------- ajustes ---------- */
+function openSettings(){
+  var fs=store.get("fs","m");
+  var opts=LANGS.map(function(l){return'<option value="'+l+'"'+(l===S.lang?" selected":"")+'>'+LANG_NAMES[l]+'</option>'}).join("");
+  openSheet('<div class="h2">'+t("settings")+'</div>'+
+    '<label class="l" style="margin-top:12px">'+t("language")+'</label><select id="setLang">'+opts+'</select>'+(S.autoLang?'<p class="muted" style="margin-top:6px">🌍 '+t("autoLang")+'</p>':"")+
+    '<label class="l" style="margin-top:16px">'+t("textSize")+'</label><div class="seg" id="setFs"><button data-fs="s" class="'+(fs==="s"?"on":"")+'" style="font-size:14px">A</button><button data-fs="m" class="'+(fs==="m"?"on":"")+'" style="font-size:17px">A</button><button data-fs="l" class="'+(fs==="l"?"on":"")+'" style="font-size:20px">A</button></div>'+
+    '<label class="l" style="margin-top:16px">'+t("translationL")+'</label><p>'+esc(S.bible?S.bible.name:"—")+'</p>'+
+    '<button class="btn ghost" id="setReset" style="margin-top:20px">'+t("reset")+'</button><button class="btn" data-close>'+t("close")+'</button>');
+  $("setLang").onchange=function(){closeSheet();setLang(this.value,true)};
+  $("setFs").onclick=function(e){var b=e.target.closest("[data-fs]");if(!b)return;applyFs(b.getAttribute("data-fs"));store.set("fs",b.getAttribute("data-fs"));this.querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b)})};
+  $("setReset").onclick=function(){if(confirm(t("resetConfirm"))){store.clear();location.reload()}};
+}
+function applyFs(k){document.documentElement.style.setProperty("--fs",{s:"15px",m:"16px",l:"18.5px"}[k]||"16px")}
+$("btnSettings").addEventListener("click",openSettings);
+
+function renderAll(){renderHeader();if(S.tab==="today")renderToday();renderBible();renderFaq($("faqSearch")?$("faqSearch").value:"");renderStudy()}
+
+/* ---------- arranque ---------- */
+applyFs(store.get("fs","m"));
+detectLang().then(function(d){
+  S.autoLang=d.auto;setLang(d.lang,false);
+  // enlaces directos: index.html#today · #bible · #faq · #study (sirve para los mails de entrega)
+  var h=(location.hash||"").replace("#","");if(["chat","today","bible","faq","study"].indexOf(h)>=0)go(h);
+});
+</script>
+</body>
+</html>
